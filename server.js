@@ -17,7 +17,9 @@ const videoDetails = require('./routes/videoDetails');
 const pageProperties = require('./routes/pageProperties');
 const headingHierarchy = require('./routes/headingHierarchy');
 const allDetails = require('./routes/allDetails');
-
+app.get('/test', (req, res) => {
+  res.send('Server is running correctly!');
+});
 // Route use
 app.use('/extract-urls', extractUrls);
 app.use('/link-details', linkDetails);
