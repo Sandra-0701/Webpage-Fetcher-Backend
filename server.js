@@ -31,14 +31,7 @@ app.get('/api/test', (req, res) => {
 
 // Route use
 app.use('/api/extract-urls', extractUrls);
-app.post('/api/link-details', (req, res) => {
-  res.header("Access-Control-Allow-Origin", "https://web-page-fetcher.vercel.app");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  res.header("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS");
-
-  // Your API logic here
-  res.send('API response');
-});
+app.use('/api/link-details', linkDetails);
 app.use('/api/image-details', imageDetails);
 app.use('/api/video-details', videoDetails);
 app.use('/api/page-properties', pageProperties);

@@ -1,5 +1,6 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const chromeLambda = require('chrome-aws-lambda');
 const router = express.Router();
 
 router.post('/', async (req, res) => {
@@ -11,7 +12,14 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const browser = await puppeteer.launch();
+    // Launch Puppeteer with chrome-aws-lambda configuration
+    const browser = await puppeteer.launch({
+      args: chromeLambda.args,
+      defaultViewport: chromeLambda.defaultViewport,
+      executablePath: await chromeLambda.executablePath,
+      headless: chromeLambda.headless,
+    });
+
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'domcontentloaded' });
 
@@ -76,7 +84,7 @@ router.post('/', async (req, res) => {
       res.json({ videos: videoDetails });
     }
   } catch (error) {
-    console.error('Error in /route:', error.message);
+    console.error('Error in /api/video-details:', error.message);
     res.status(500).send('Failed to process page content.');
   }
 });
