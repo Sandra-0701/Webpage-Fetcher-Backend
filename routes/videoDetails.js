@@ -14,6 +14,7 @@ router.post('/', async (req, res) => {
   try {
     // Fetch the page content
     const { data } = await axios.get(url);
+    console.log('Page content fetched successfully.');
     const $ = cheerio.load(data);
 
     // Prepare response object
@@ -27,6 +28,8 @@ router.post('/', async (req, res) => {
       console.log('Extracted UHF Header:', uhfHeader);
       console.log('Extracted UHF Footer:', uhfFooter);
 
+      response.uhfHeader = uhfHeader;
+      response.uhfFooter = uhfFooter;
 
     } else {
       // Extract video details
@@ -41,8 +44,8 @@ router.post('/', async (req, res) => {
         const videoDetail = {
           transcript: (options.downloadableFiles || [])
             .filter(file => file.mediaType === 'transcript')
-            .map(file => file.locale),
-          cc: (options.ccFiles || []).map(file => file.locale),
+            .map(file => file.locale || ''),
+          cc: (options.ccFiles || []).map(file => file.locale || ''),
           autoplay: options.autoplay ? 'yes' : 'no',
           muted: options.muted ? 'yes' : 'no',
           ariaLabel: options.ariaLabel || options.title || '',
@@ -53,7 +56,6 @@ router.post('/', async (req, res) => {
       });
 
       response.videoDetails = videoDetailsList;
-
     }
 
     // Respond with the appropriate content
