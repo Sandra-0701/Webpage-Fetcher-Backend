@@ -67,4 +67,6 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.use('/api/video-details', videoDetailsRouter);
+
 module.exports = router;
