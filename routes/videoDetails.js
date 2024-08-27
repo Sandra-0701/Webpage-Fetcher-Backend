@@ -14,42 +14,42 @@ router.post('/', async (req, res) => {
   try {
     // Fetch the page content
     const { data } = await axios.get(url);
-
-    // Load the HTML content into cheerio
     const $ = cheerio.load(data);
 
-    // Extract UHF content
-    const uhfHeader = onlyUhf ? $('header').html() || '' : '';
-    const uhfFooter = onlyUhf ? $('footer').html() || '' : '';
+    if (onlyUhf) {
+      // Extract only UHF content (header/footer)
+      const uhfHeader = $('header').html() || '';
+      const uhfFooter = $('footer').html() || '';
+      return res.json({ uhfHeader, uhfFooter });
+    }
 
     // Extract video details
     const videoDetailsList = [];
-    
-    if (!onlyUhf) {
-      $('universal-media-player').each((index, element) => {
-        // Example for extracting options, adjust based on your HTML structure
-        const options = $(element).attr('options');
-        const videoDetail = {
-          transcript: [], // Adjust as necessary
-          cc: [], // Adjust as necessary
-          autoplay: $(element).attr('autoplay') ? "yes" : "no",
-          muted: $(element).attr('muted') ? "yes" : "no",
-          ariaLabel: $(element).attr('aria-label') || $(element).attr('title') || "",
-          audioTrack: $(element).find('.vjs-audio-button').length > 0 ? "yes" : "no",
-        };
+    $('universal-media-player').each((i, element) => {
+      const videoElement = $(element);
+      const options = JSON.parse(videoElement.attr('options') || '{}');
 
-        videoDetailsList.push(videoDetail);
-      });
-    }
+      const audioTrackButton = videoElement.find('.vjs-audio-button.vjs-menu-button.vjs-menu-button-popup.vjs-button').length > 0;
+      const audioTrackPresent = audioTrackButton ? 'yes' : 'no';
 
-    // Respond with the relevant details based on onlyUhf
-    if (onlyUhf) {
-      res.json({ uhfHeader, uhfFooter });
-    } else {
-      res.json({ videos: videoDetailsList });
-    }
+      const videoDetail = {
+        transcript: (options.downloadableFiles || [])
+          .filter(file => file.mediaType === 'transcript')
+          .map(file => file.locale),
+        cc: (options.ccFiles || []).map(file => file.locale),
+        autoplay: options.autoplay ? 'yes' : 'no',
+        muted: options.muted ? 'yes' : 'no',
+        ariaLabel: options.ariaLabel || options.title || '',
+        audioTrack: audioTrackPresent,
+      };
+
+      videoDetailsList.push(videoDetail);
+    });
+
+    // Respond with video details only
+    res.json({ videoDetails: videoDetailsList });
   } catch (error) {
-    console.error('Error in /api/video-details:', error); // Log the full error object
+    console.error('Error in /api/video-details:', error.message);
     res.status(500).send('Failed to process page content.');
   }
 });
