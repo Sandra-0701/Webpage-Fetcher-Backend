@@ -84,7 +84,7 @@ router.post('/', async (req, res) => {
       res.json({ videos: videoDetails });
     }
   } catch (error) {
-    console.error('Error in /api/video-details:', error.message);
+    console.error('Error in /api/video-details:', error); // Log the full error object
     res.status(500).send('Failed to process page content.');
   }
 });
