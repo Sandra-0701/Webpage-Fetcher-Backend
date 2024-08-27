@@ -9,9 +9,9 @@ const port = process.env.PORT || 5000;  // Use Vercel's port or fallback to 5000
 app.use(express.json());
 app.use(cors({
   origin: ['https://web-page-fetcher.vercel.app'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 3600, // 1 hour
+ 
 }));
 
 
