@@ -8,10 +8,9 @@ const port = process.env.PORT || 5000;  // Use Vercel's port or fallback to 5000
 // Middleware
 app.use(express.json());
 app.use(cors({
-  origin: ['https://web-page-fetcher.vercel.app'],
+  origin: 'https://web-page-fetcher.vercel.app/', // Allow only your frontend domain
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
- 
 }));
 
 
