@@ -4,18 +4,10 @@ require('dotenv').config(); // Load environment variables
 
 const app = express();
 const port = process.env.PORT || 5000;  // Use Vercel's port or fallback to 5000 for local development
-const allowedOrigins = ['https://web-page-fetcher.vercel.app'];
+
 // Middleware
 app.use(express.json());
-app.use(cors({
-  origin: function (origin, callback) {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
-}));
+app.use(cors({ origin: 'https://web-page-fetcher.vercel.app' }));
 
 
 // Route imports
