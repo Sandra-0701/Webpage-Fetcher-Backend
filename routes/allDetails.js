@@ -40,8 +40,7 @@ router.post('/', async (req, res) => {
     };
 
     const linkElements = $('a').toArray();
-    const linkPromises = linkElements.map(link => processLink(link, $));
-    const links = await Promise.all(linkPromises);
+    const links = await processLink(linkElements, $);
 
     const images = $('img').map((_, element) => ({
       imageName: $(element).attr('src')?.trim() || 'No Source',
@@ -86,4 +85,4 @@ router.post('/', async (req, res) => {
   }
 });
 
-module.exports = router
+module.exports = router;
