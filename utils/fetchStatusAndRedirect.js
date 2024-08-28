@@ -1,16 +1,12 @@
-//utils/fetchStatusAndRedirect.js
 const axios = require('axios');
-const { get } = require('follow-redirects');
 const getStatusColor = require('./getStatusColor');
 
 const fetchStatusAndRedirect = async (url) => {
   try {
-    const response = await axios({
-      method: 'get',
-      url,
-      maxRedirects: 0, // Disable automatic redirects
-      validateStatus: () => true, // Accept all status codes
-      responseType: 'text', // Ensure response is treated as text
+    console.log(`Fetching status for URL: ${url}`);
+    const response = await axios.get(url, {
+      timeout: 10000, // 10-second timeout
+      validateStatus: () => true,
     });
 
     const redirectedUrl = response.request.res.responseUrl || url;
@@ -20,22 +16,20 @@ const fetchStatusAndRedirect = async (url) => {
       statusColor: getStatusColor(response.status),
     };
   } catch (error) {
+    console.error(`Error fetching status for URL: ${url}`, error.message);
     if (error.response) {
-      // Response error
       return {
         statusCode: error.response.status,
         redirectedUrl: error.response.request.res.responseUrl || url,
         statusColor: getStatusColor(error.response.status),
       };
     } else if (error.request) {
-      // No response received
       return {
         statusCode: 500,
         redirectedUrl: url,
         statusColor: getStatusColor(500),
       };
     } else {
-      // Other errors
       return {
         statusCode: 500,
         redirectedUrl: url,
