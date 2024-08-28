@@ -1,8 +1,6 @@
-//routes/allDetails.js
 const express = require('express');
 const cheerio = require('cheerio');
-const puppeteer = require('puppeteer');
-const getPageContent = require('../utils/getPageContent');
+const axios = require('axios');
 const processLink = require('../utils/processLink');
 
 const router = express.Router();
@@ -54,56 +52,20 @@ router.post('/', async (req, res) => {
       text: $(element).text().trim(),
     })).get();
 
-    // Fetch video details only if not in UHF mode
-    if (!onlyUhf) {
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
-      await page.goto(url);
-
-      videoDetails = await page.evaluate(async () => {
-        const videoDetailsList = [];
-        const videoElements = document.querySelectorAll("universal-media-player");
-
-        // Helper function to wait for the audio track button to be rendered
-        const waitForRender = (videoElement) => {
-          return new Promise((resolve) => {
-            const checkButton = () => {
-              const audioTrackButton = videoElement.querySelector('.vjs-audio-button.vjs-menu-button.vjs-menu-button-popup.vjs-button');
-              if (audioTrackButton) {
-                resolve(audioTrackButton);
-              } else {
-                requestAnimationFrame(checkButton);
-              }
-            };
-            checkButton();
-          });
-        };
-
-        for (const videoElement of videoElements) {
-          const options = JSON.parse(videoElement.getAttribute("options"));
-
-          const audioTrackButton = await waitForRender(videoElement);
-          const audioTrackPresent = audioTrackButton && audioTrackButton.querySelector('span.vjs-control-text') ? "yes" : "no";
-
-          const videoDetail = {
-            transcript: options.downloadableFiles
-              .filter(file => file.mediaType === "transcript")
-              .map(file => file.locale),
-            cc: options.ccFiles.map(file => file.locale),
-            autoplay: options.autoplay ? "yes" : "no",
-            muted: options.muted ? "yes" : "no",
-            ariaLabel: options.ariaLabel || options.title || "",
-            audioTrack: audioTrackPresent,
-          };
-
-          videoDetailsList.push(videoDetail);
-        }
-
-        return videoDetailsList;
-      });
-
-      await browser.close();
-    }
+    // Extract video details
+    videoDetails = $('universal-media-player').map((_, element) => {
+      const options = JSON.parse($(element).attr('options') || '{}');
+      return {
+        transcript: options.downloadableFiles
+          ? options.downloadableFiles.filter(file => file.mediaType === "transcript").map(file => file.locale)
+          : [],
+        cc: options.ccFiles ? options.ccFiles.map(file => file.locale) : [],
+        autoplay: options.autoplay ? "yes" : "no",
+        muted: options.muted ? "yes" : "no",
+        ariaLabel: options.ariaLabel || options.title || "",
+        audioTrack: $(element).find('.vjs-audio-button').length > 0 ? "yes" : "no",
+      };
+    }).get();
 
     // Send the response with all details
     res.json({ 
