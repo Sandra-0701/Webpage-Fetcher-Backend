@@ -1,3 +1,4 @@
+//routes/linkDetails.js
 const express = require('express');
 const router = express.Router();
 const getPageContent = require('../utils/getPageContent');

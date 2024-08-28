@@ -1,3 +1,4 @@
+//routes/allDetails.js
 const express = require('express');
 const cheerio = require('cheerio');
 const puppeteer = require('puppeteer');

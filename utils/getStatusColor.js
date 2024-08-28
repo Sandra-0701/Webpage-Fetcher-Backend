@@ -1,3 +1,4 @@
+//getStatusColor.js
 const getStatusColor = (statusCode) => {
     if (statusCode >= 500) return 'red'; // Server errors
     if (statusCode >= 400) return 'orange'; // Client errors

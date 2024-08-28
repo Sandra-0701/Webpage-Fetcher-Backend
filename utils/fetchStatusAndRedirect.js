@@ -1,3 +1,4 @@
+//utils/fetchStatusAndRedirect.js
 const axios = require('axios');
 const { get } = require('follow-redirects');
 const getStatusColor = require('./getStatusColor');
