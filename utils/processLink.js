@@ -1,3 +1,6 @@
+const axios = require('axios');
+const getStatusColor = require('./getStatusColor');
+
 const processLink = async (link, $) => {
   const href = $(link).attr('href');
   const text = $(link).text().trim();
@@ -32,7 +35,7 @@ const processLink = async (link, $) => {
       const response = await axios.get(href, {
         maxRedirects: 5,
         timeout: 5000,
-        validateStatus: () => true,
+        validateStatus: () => true, // Accept all status codes for handling
       });
 
       linkDetails.statusCode = response.status;
