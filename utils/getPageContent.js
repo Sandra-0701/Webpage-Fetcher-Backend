@@ -12,8 +12,7 @@ const getPageContent = async (url, onlyUhf = false) => {
     const footer = $('footer').html() || '';
 
     // Extract main content if not onlyUhf
-    const content = onlyUhf ? '' : $('main.microsoft-template-layout-container').html() || '';
-
+    const content = onlyUhf ? '' : $('main.microsoft-template-layout-container').html() || $('section#primaryArea[role="main"]').html() || '';
     // Extract meta tags or other page properties
     const pageProperties = $('meta').map((_, meta) => ({
       name: $(meta).attr('name') || $(meta).attr('property'),
