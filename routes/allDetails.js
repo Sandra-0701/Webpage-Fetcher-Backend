@@ -41,8 +41,14 @@ router.post('/', async (req, res) => {
 
     // Extract link details
     const linkElements = $('a').toArray();
-    const linkPromises = linkElements.map((link) => processLink(link, $));
-    links = await Promise.all(linkPromises);
+    console.log("linkElements:", linkElements); // Debugging: Check the content of linkElements
+
+    if (Array.isArray(linkElements)) {
+      const linkPromises = linkElements.map((link) => processLink(link, $));
+      links = await Promise.all(linkPromises);
+    } else {
+      console.error('linkElements is not an array.');
+    }
 
     // Extract images
     images = $('img')
@@ -118,6 +124,7 @@ router.post('/', async (req, res) => {
 
     res.json(response);
   } catch (error) {
+    console.error('Error processing URL:', url);
     console.error('Detailed error:', error);
     res.status(500).json({ error: error.message, stack: error.stack });
   }
