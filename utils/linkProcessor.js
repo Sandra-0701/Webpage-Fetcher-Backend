@@ -1,7 +1,7 @@
 const axios = require('axios');
 const getStatusColor = require('./getStatusColor');
 
-const processLink = async (links, $) => {
+const linkProcessor = async (links, $) => {
   // Ensure links is an array. If not, return an empty array.
   if (!Array.isArray(links)) {
     console.error('Expected an array of links, but received:', typeof links);
@@ -67,4 +67,4 @@ const processLink = async (links, $) => {
   return processedLinks;
 };
 
-module.exports = processLink;
+module.exports = linkProcessor;

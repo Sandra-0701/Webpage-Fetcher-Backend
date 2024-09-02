@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const getPageContent = require('../utils/getPageContent');
-const processLink = require('../utils/processLink');
+const processLink = require('../utils/linkProcessor');
 
 router.post('/', async (req, res) => {
   const { url, onlyUhf = false } = req.body;
