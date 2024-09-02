@@ -1,3 +1,4 @@
+// processLink.js
 const axios = require('axios');
 const getStatusColor = require('./getStatusColor');
 
@@ -35,7 +36,7 @@ const processLink = async (link, $) => {
       const response = await axios.get(href, {
         maxRedirects: 5,
         timeout: 5000,
-        validateStatus: () => true, // Accept all status codes for handling
+        validateStatus: () => true,
       });
 
       linkDetails.statusCode = response.status;
@@ -48,7 +49,7 @@ const processLink = async (link, $) => {
       }
     } catch (error) {
       linkDetails.statusCode = error.response ? error.response.status : 500;
-      linkDetails.statusColor = 'red';
+      linkDetails.statusColor = getStatusColor(linkDetails.statusCode);
     }
   }
 
