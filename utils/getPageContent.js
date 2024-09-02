@@ -1,3 +1,4 @@
+//utils/getPageContent.js
 const axios = require('axios');
 const cheerio = require('cheerio');
 
@@ -11,7 +12,7 @@ const getPageContent = async (url, onlyUhf = false) => {
     const footer = $('footer').html() || '';
 
     // Extract main content if not onlyUhf
-    const content = onlyUhf ? '' : $('main.microsoft-template-layout-container').html() || $('section#primaryArea[role="main"]').html() || '';
+    const content = onlyUhf ? '' : $('main.microsoft-template-layout-container').html() || '';
 
     // Extract meta tags or other page properties
     const pageProperties = $('meta').map((_, meta) => ({
