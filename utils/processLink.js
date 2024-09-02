@@ -17,7 +17,7 @@ const processLink = async (link, $) => {
     linkType = 'link';
   }
 
-  let linkDetails = {
+  const linkDetails = {
     linkType,
     linkText: text,
     ariaLabel: ariaLabel || '',
@@ -39,7 +39,7 @@ const processLink = async (link, $) => {
       });
 
       linkDetails.statusCode = response.status;
-      linkDetails.redirectedUrl = response.request.res.responseUrl || href;
+      linkDetails.redirectedUrl = response.request.res.responseURL || href;
       linkDetails.statusColor = getStatusColor(response.status);
 
       if (href !== linkDetails.redirectedUrl) {
