@@ -49,7 +49,7 @@ router.post('/', async (req, res) => {
     } else {
       console.error('linkElements is not an array.');
     }
-
+    
     // Extract images
     images = $('img')
       .map((_, element) => ({
