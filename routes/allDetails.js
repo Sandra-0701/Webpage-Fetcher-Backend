@@ -1,87 +1,125 @@
 const express = require('express');
-const cheerio = require('cheerio');
 const axios = require('axios');
+const cheerio = require('cheerio');
 const processLink = require('../utils/processLink');
+const getStatusColor = require('../utils/getStatusColor');
 
 const router = express.Router();
 
-const getPageContent = async (url, onlyUhf = false) => {
+router.post('/', async (req, res) => {
+  const { url, onlyUhf } = req.body;
+
+  if (!url) {
+    return res.status(400).send('URL is required');
+  }
+
   try {
     const { data } = await axios.get(url);
+    console.log('Page content fetched successfully.');
     const $ = cheerio.load(data);
 
-    const header = $('header').html() || '';
-    const footer = $('footer').html() || '';
-    const content = onlyUhf ? '' : $('body').html() || '';
+    let links = [];
+    let images = [];
+    let headings = [];
+    let videoDetails = [];
+    let pageProperties = [];
 
-    return { content, header, footer };
-  } catch (error) {
-    console.error('Error fetching page content:', error.message);
-    throw error;
-  }
-};
+    // Extract all meta tags
+    $('meta').each((_, element) => {
+      const name = $(element).attr('name') || $(element).attr('property');
+      const content = $(element).attr('content');
+      if (name && content) {
+        pageProperties.push({ name, content });
+      }
+    });
 
-router.post('/', async (req, res) => {
-  const { url, onlyUhf = false } = req.body;
+    // Add title to page properties
+    pageProperties.push({
+      name: 'title',
+      content: $('title').text().trim() || 'No Title',
+    });
 
-  try {
-    const { content, header, footer } = await getPageContent(url, onlyUhf);
+    // Extract link details
+    const linkElements = $('a').toArray();
+    const linkPromises = linkElements.map((link) => processLink(link, $));
+    links = await Promise.all(linkPromises);
 
-    if (!content && !header && !footer) {
-      return res.status(404).send('No content found.');
-    }
+    // Extract images
+    images = $('img')
+      .map((_, element) => ({
+        imageName: $(element).attr('src')?.trim() || 'No Source',
+        alt: $(element).attr('alt')?.trim() || 'No Alt Text',
+        hasAlt: !!$(element).attr('alt'),
+      }))
+      .get();
 
-    const $ = cheerio.load(onlyUhf ? `${header}${footer}` : content);
-
-    const pageProperties = {
-      title: $('title').text().trim() || 'No Title',
-      description: $('meta[name="description"]').attr('content')?.trim() || 'No Description',
-      keywords: $('meta[name="keywords"]').attr('content')?.trim() || 'No Keywords',
+    // Extract heading hierarchy
+    const extractHeadings = (element, level = 1) => {
+      const headings = [];
+      $(element).children().each((_, child) => {
+        const $child = $(child);
+        const tagName = child.name.toLowerCase();
+        if (tagName.match(/^h[1-6]$/)) {
+          const headingLevel = parseInt(tagName.charAt(1));
+          headings.push({
+            level: headingLevel,
+            text: $child.text().trim(),
+            children: extractHeadings($child, level + 1),
+          });
+        } else {
+          headings.push(...extractHeadings($child, level));
+        }
+      });
+      return headings;
     };
 
-    const linkElements = $('a').toArray();
-    const links = await processLink(linkElements, $);
+    headings = extractHeadings($('body'));
 
-    const images = $('img').map((_, element) => ({
-      imageName: $(element).attr('src')?.trim() || 'No Source',
-      alt: $(element).attr('alt')?.trim() || 'No Alt Text',
-      hasAlt: !!$(element).attr('alt'),
-    })).get();
+    // Extract video details
+    $('universal-media-player').each((i, element) => {
+      const videoElement = $(element);
+      const options = JSON.parse(videoElement.attr('options') || '{}');
 
-    const headings = $('h1, h2, h3, h4, h5, h6').map((_, element) => ({
-      level: element.name,
-      text: $(element).text().trim(),
-    })).get();
+      const audioTrackButton =
+        videoElement.find('.vjs-audio-button.vjs-menu-button.vjs-menu-button-popup.vjs-button').length > 0;
+      const audioTrackPresent = audioTrackButton ? 'yes' : 'no';
 
-    const videoDetails = $('universal-media-player').map((_, element) => {
-      let options = {};
-      try {
-        options = JSON.parse($(element).attr('options') || '{}');
-      } catch (error) {
-        console.error('Error parsing video options:', error);
-      }
-      return {
-        transcript: options.downloadableFiles
-          ? options.downloadableFiles.filter(file => file.mediaType === "transcript").map(file => file.locale)
-          : [],
-        cc: options.ccFiles ? options.ccFiles.map(file => file.locale) : [],
-        autoplay: options.autoplay ? "yes" : "no",
-        muted: options.muted ? "yes" : "no",
-        ariaLabel: options.ariaLabel || options.title || "",
-        audioTrack: $(element).find('.vjs-audio-button').length > 0 ? "yes" : "no",
+      const videoDetail = {
+        transcript: (options.downloadableFiles || [])
+          .filter((file) => file.mediaType === 'transcript')
+          .map((file) => file.locale || ''),
+        cc: (options.ccFiles || []).map((file) => file.locale || ''),
+        autoplay: options.autoplay ? 'yes' : 'no',
+        muted: options.muted ? 'yes' : 'no',
+        ariaLabel: options.ariaLabel || options.title || '',
+        audioTrack: audioTrackPresent,
       };
-    }).get();
 
-    res.json({
-      pageProperties,
+      videoDetails.push(videoDetail);
+    });
+
+    // Extract UHF content
+    const uhfHeader = $('header').html() || '';
+    const uhfFooter = $('footer').html() || '';
+
+    console.log('Extracted UHF Header:', uhfHeader);
+    console.log('Extracted UHF Footer:', uhfFooter);
+
+    // Prepare response object based on onlyUhf flag
+    const response = {
       links,
       images,
-      headings,
-      videoDetails
-    });
+      headingHierarchy: headings,
+      uhfHeader,
+      uhfFooter,
+      pageProperties,
+      videoDetails,
+    };
+
+    res.json(response);
   } catch (error) {
-    console.error('Error in /all-details route:', error);
-    res.status(500).send('Failed to process page content: ' + error.message);
+    console.error('Detailed error:', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
